@@ -1,0 +1,8 @@
+name = "pt-proxy"
+main = "worker.js"
+compatibility_date = "2026-04-09"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "pt-users"
+database_id = "cdf54e68-334c-41a2-a6c7-cc9db8caeedb"
