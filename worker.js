@@ -50,7 +50,7 @@ function html(content, status=200, extraHeaders={}) {
 
 const STYLES = `
 *{margin:0;padding:0;box-sizing:border-box;}
-body{font-family:'Lato',sans-serif;background:#0f2318;min-height:100vh;display:flex;align-items:center;justify-content:center;}
+body{font-family:Lato,sans-serif;background:#0f2318;min-height:100vh;display:flex;align-items:center;justify-content:center;}
 .card{background:#fff;border-radius:16px;padding:48px;width:100%;max-width:420px;box-shadow:0 24px 80px rgba(0,0,0,0.4);}
 .logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
 .logo-text{font-size:18px;color:#1a3a2a;font-weight:700;letter-spacing:-.01em;}
@@ -202,7 +202,68 @@ export default {
       const { results } = await env.DB.prepare('SELECT * FROM users ORDER BY created_at DESC').all();
       const users = results || [];
 
-      return html('<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin — The Partnership Tree</title><link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700;900&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Lato',sans-serif;background:#f5f5f0;min-height:100vh;padding:40px 24px;}.container{max-width:960px;margin:0 auto;}h1{font-size:22px;color:#1a3a2a;margin-bottom:4px;font-weight:900;}.sub{font-size:13px;color:#6b7c6b;margin-bottom:28px;}.card{background:#fff;border-radius:12px;padding:28px;border:1.5px solid #dde8de;margin-bottom:24px;}h2{font-size:15px;color:#1a3a2a;margin-bottom:18px;font-weight:700;}label{font-size:11px;font-weight:700;color:#1a3a2a;letter-spacing:.06em;text-transform:uppercase;display:block;margin-bottom:5px;}input{width:100%;padding:10px 12px;border:1.5px solid #dde8de;border-radius:7px;font-size:13px;font-family:inherit;color:#1a3a2a;outline:none;margin-bottom:12px;}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}.btn{padding:10px 20px;background:#1a3a2a;border:none;border-radius:7px;font-weight:700;font-size:13px;color:#fff;cursor:pointer;font-family:inherit;}.btn-red{background:#c0392b;}table{width:100%;border-collapse:collapse;font-size:13px;}th{text-align:left;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#6b7c6b;padding:8px 12px;border-bottom:2px solid #dde8de;}td{padding:10px 12px;border-bottom:1px solid #f0f0ea;color:#1a3a2a;vertical-align:middle;}.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}.bg{background:#e8f5e9;color:#1a6b2a;}.br{background:#ffeaea;color:#c0392b;}.ba{background:#fff8e1;color:#8a6000;}.logout{color:#c0392b;font-weight:700;text-decoration:none;font-size:13px;}</style></head><body><div class="container"><div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;"><h1>Platform Admin</h1><a href="https://pt-proxy.paulf-ofarrell.workers.dev/logout" class="logout">Log out</a></div><div class="sub">The Partnership Tree — User Management</div><div class="card"><h2>Create New User</h2><form method="POST" action="https://pt-proxy.paulf-ofarrell.workers.dev/admin/create-user"><div class="grid"><div><label>Full Name *</label><input type="text" name="name" placeholder="Jane Smith" required/></div><div><label>Company *</label><input type="text" name="company" placeholder="Pharma Co" required/></div></div><div class="grid"><div><label>Email *</label><input type="email" name="email" placeholder="jane@pharma.com" required/></div><div><label>Role</label><input type="text" name="role" placeholder="Head of BD"/></div></div><label>Temporary Password *</label><input type="text" name="temp_password" placeholder="e.g. Welcome2025" required style="margin-bottom:16px;"/><button type="submit" class="btn">Create User →</button></form></div><div class="card"><h2>Users (\' + users.length + ')</h2><table><tr><th>Name</th><th>Company</th><th>Email</th><th>Status</th><th>Password</th><th>Created</th><th></th></tr>\' + users.map(u=>'<tr><td>\${u.name + '</td><td>\' + u.company + '</td><td>\' + u.email + '</td><td><span class="badge \' + u.active?'bg':'br' + '">\' + u.active?'Active':'Inactive' + '</span></td><td><span class="badge \' + u.first_login?'ba':'bg' + '">\' + u.first_login?'Temp':'Set' + '</span></td><td>\' + (u.created_at||'').substring(0,10) + '</td><td><form method="POST" action="https://pt-proxy.paulf-ofarrell.workers.dev/admin/toggle-user" style="display:inline"><input type="hidden" name="id" value="\' + u.id + '"/><input type="hidden" name="active" value="\' + u.active?0:1 + '"/><button type="submit" class="btn \' + u.active?'btn-red':'' + '" style="padding:4px 10px;font-size:11px;">\' + u.active?'Deactivate':'Activate' + '</button></form></td></tr>').join('')}</table></div></div></body></html>');
+      let rows = '';
+      for (const u of users) {
+        rows += '<tr>';
+        rows += '<td>' + u.name + '</td>';
+        rows += '<td>' + u.company + '</td>';
+        rows += '<td>' + u.email + '</td>';
+        rows += '<td><span class="badge ' + (u.active ? 'bg' : 'br') + '">' + (u.active ? 'Active' : 'Inactive') + '</span></td>';
+        rows += '<td><span class="badge ' + (u.first_login ? 'ba' : 'bg') + '">' + (u.first_login ? 'Temp' : 'Set') + '</span></td>';
+        rows += '<td>' + (u.created_at || '').substring(0, 10) + '</td>';
+        rows += '<td><form method="POST" action="https://pt-proxy.paulf-ofarrell.workers.dev/admin/toggle-user" style="display:inline">';
+        rows += '<input type="hidden" name="id" value="' + u.id + '"/>';
+        rows += '<input type="hidden" name="active" value="' + (u.active ? 0 : 1) + '"/>';
+        rows += '<button type="submit" class="btn ' + (u.active ? 'btn-red' : '') + '" style="padding:4px 10px;font-size:11px;">' + (u.active ? 'Deactivate' : 'Activate') + '</button>';
+        rows += '</form></td></tr>';
+      }
+
+      const adminHtml = '<!DOCTYPE html><html><head><meta charset="UTF-8">'
+        + '<title>Admin - The Partnership Tree</title>'
+        + '<style>*{margin:0;padding:0;box-sizing:border-box;}'
+        + 'body{font-family:Lato,sans-serif;background:#f5f5f0;min-height:100vh;padding:40px 24px;}'
+        + '.container{max-width:960px;margin:0 auto;}'
+        + 'h1{font-size:22px;color:#1a3a2a;margin-bottom:4px;font-weight:900;}'
+        + '.sub{font-size:13px;color:#6b7c6b;margin-bottom:28px;}'
+        + '.card{background:#fff;border-radius:12px;padding:28px;border:1.5px solid #dde8de;margin-bottom:24px;}'
+        + 'h2{font-size:15px;color:#1a3a2a;margin-bottom:18px;font-weight:700;}'
+        + 'label{font-size:11px;font-weight:700;color:#1a3a2a;display:block;margin-bottom:5px;}'
+        + 'input{width:100%;padding:10px 12px;border:1.5px solid #dde8de;border-radius:7px;font-size:13px;font-family:inherit;color:#1a3a2a;outline:none;margin-bottom:12px;}'
+        + '.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}'
+        + '.btn{padding:10px 20px;background:#1a3a2a;border:none;border-radius:7px;font-weight:700;font-size:13px;color:#fff;cursor:pointer;font-family:inherit;}'
+        + '.btn-red{background:#c0392b;}'
+        + 'table{width:100%;border-collapse:collapse;font-size:13px;}'
+        + 'th{text-align:left;font-size:10px;font-weight:700;color:#6b7c6b;padding:8px 12px;border-bottom:2px solid #dde8de;}'
+        + 'td{padding:10px 12px;border-bottom:1px solid #f0f0ea;color:#1a3a2a;vertical-align:middle;}'
+        + '.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;}'
+        + '.bg{background:#e8f5e9;color:#1a6b2a;}.br{background:#ffeaea;color:#c0392b;}.ba{background:#fff8e1;color:#8a6000;}'
+        + '.logout{color:#c0392b;font-weight:700;text-decoration:none;font-size:13px;}'
+        + '</style></head><body>'
+        + '<div class="container">'
+        + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
+        + '<h1>Platform Admin</h1>'
+        + '<a href="https://pt-proxy.paulf-ofarrell.workers.dev/logout" class="logout">Log out</a>'
+        + '</div>'
+        + '<div class="sub">The Partnership Tree - User Management</div>'
+        + '<div class="card"><h2>Create New User</h2>'
+        + '<form method="POST" action="https://pt-proxy.paulf-ofarrell.workers.dev/admin/create-user">'
+        + '<div class="grid">'
+        + '<div><label>Full Name *</label><input type="text" name="name" placeholder="Jane Smith" required/></div>'
+        + '<div><label>Company *</label><input type="text" name="company" placeholder="Pharma Co" required/></div>'
+        + '</div><div class="grid">'
+        + '<div><label>Email *</label><input type="email" name="email" placeholder="jane@pharma.com" required/></div>'
+        + '<div><label>Role</label><input type="text" name="role" placeholder="Head of BD"/></div>'
+        + '</div>'
+        + '<label>Temporary Password *</label>'
+        + '<input type="text" name="temp_password" placeholder="e.g. Welcome2025" required style="margin-bottom:16px;"/>'
+        + '<button type="submit" class="btn">Create User</button>'
+        + '</form></div>'
+        + '<div class="card"><h2>Users (' + users.length + ')</h2>'
+        + '<table><tr><th>Name</th><th>Company</th><th>Email</th><th>Status</th><th>Password</th><th>Created</th><th></th></tr>'
+        + rows
+        + '</table></div></div></body></html>';
+
+      return html(adminHtml);
     }
 
     // ── Admin create user ──
