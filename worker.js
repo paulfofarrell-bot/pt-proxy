@@ -8,18 +8,18 @@ async function hashPassword(password) {
 async function createToken(payload, secret) {
   const header = btoa(JSON.stringify({alg:'HS256',typ:'JWT'}));
   const body = btoa(JSON.stringify({...payload, exp: Math.floor(Date.now()/1000) + 604800}));
-  const data = `${header}.${body}`;
+  const data = header + '.' + body;
   const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
   const sigB64 = btoa(String.fromCharCode(...new Uint8Array(sig))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=/g,'');
-  return `${data}.${sigB64}`;
+  return data + '.' + sigB64;
 }
 
 async function verifyToken(token, secret) {
   try {
     const parts = token.split('.');
     if(parts.length !== 3) return null;
-    const data = `${parts[0]}.${parts[1]}`;
+    const data = parts[0] + '.' + parts[1];
     const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['verify']);
     const sig = Uint8Array.from(atob(parts[2].replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
     const valid = await crypto.subtle.verify('HMAC', key, sig, new TextEncoder().encode(data));
@@ -144,7 +144,7 @@ export default {
       return new Response(null, {
         status: 302,
         headers: {
-          'Set-Cookie': \`pt_session=\${token}; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=604800; Domain=.paulf-ofarrell.workers.dev\`,
+          'Set-Cookie': 'pt_session=' + token + '; Path=/; HttpOnly; Secure; SameSite=None; Max-Age=604800; Domain=.paulf-ofarrell.workers.dev',
           'Location': dest
         }
       });
