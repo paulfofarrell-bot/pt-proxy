@@ -76,7 +76,7 @@ export default {
     const path = url.pathname;
     const method = request.method;
     const JWT_SECRET = env.JWT_SECRET || 'pt-fallback-secret';
-    const MAIN_SITE = 'https://app.thepartnershiptree.com';
+    const MAIN_SITE = 'app.thepartnershiptree.com';
 
     // ── CORS preflight ──
     if (method === 'OPTIONS') {
